@@ -1,4 +1,4 @@
-name: Build ATJ Firmware Tool - Windows
+name: Build ATJ Firmware Tool - Windows (MinGW)
 
 on:
   push:
@@ -8,36 +8,44 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    runs-on: windows-latest # 使用Windows运行器
+  build-windows-mingw:
+    runs-on: windows-latest
 
     steps:
     - name: Checkout repository code
       uses: actions/checkout@v4
 
-    - name: Setup MSVC Build Environment
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64 # 也可以选择 x86
+    - name: Install MinGW-w64
+      run: choco install mingw -y --no-progress
+      shell: pwsh # 使用PowerShell
+
+    - name: Add MinGW to PATH
+      run: |
+        $mingwPath = "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin"
+        echo "::add-path::$mingwPath"
+      shell: pwsh
 
     - name: Create Build Directory
       run: mkdir build
 
-    - name: Configure with CMake
-      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-      shell: cmd # 使用cmd而不是默认的PowerShell
+    - name: Configure with CMake for MinGW
+      run: |
+        cmake -B build -S . `
+          -G "MinGW Makefiles" `
+          -DCMAKE_BUILD_TYPE=Release
+      shell: pwsh
 
     - name: Build Project
       run: cmake --build build --config Release --parallel
-      shell: cmd
+      shell: pwsh
 
     - name: List Build Artifacts
-      run: dir build\Release\ /B
-      shell: cmd
+      run: Get-ChildItem build -Filter *.exe -Name
+      shell: pwsh
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: atj-firmware-tool-windows-msvc
-        path: build\Release\*.exe # 上传所有exe文件
+        name: atj-firmware-tool-windows-mingw
+        path: build\*.exe
         if-no-files-found: error
