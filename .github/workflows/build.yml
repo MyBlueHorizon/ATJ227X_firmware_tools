@@ -1,0 +1,43 @@
+name: Build ATJ Firmware Tool - Windows
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest # 使用Windows运行器
+
+    steps:
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    - name: Setup MSVC Build Environment
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64 # 也可以选择 x86
+
+    - name: Create Build Directory
+      run: mkdir build
+
+    - name: Configure with CMake
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+      shell: cmd # 使用cmd而不是默认的PowerShell
+
+    - name: Build Project
+      run: cmake --build build --config Release --parallel
+      shell: cmd
+
+    - name: List Build Artifacts
+      run: dir build\Release\ /B
+      shell: cmd
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: atj-firmware-tool-windows-msvc
+        path: build\Release\*.exe # 上传所有exe文件
+        if-no-files-found: error
