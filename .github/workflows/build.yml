@@ -25,10 +25,6 @@ jobs:
         echo "$mingwPath" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
       shell: pwsh
 
-    - name: Verify PATH
-      run: echo "Current PATH: $env:PATH"
-      shell: pwsh
-
     - name: Create Build Directory
       run: mkdir build
 
